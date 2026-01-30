@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Able Ops MVP
 
-## Getting Started
+MVP combining task management and reliability operations (Trello + Betterstack style). Built for the Able to compete challenge to demonstrate an AI-first, human-quality delivery in hours.
 
-First, run the development server:
+### Features
+- Task board with workflow moves (Backlog → Todo → Doing → Done)
+- Incident response flow with severity and status tracking
+- Alert simulation + audit logging
+- Operational log stream
+- Analytics snapshot dashboard
+- Release notes center
+- AI/MCP integration placeholder panel
 
+### Stack
+- Next.js App Router + Tailwind
+- Prisma + SQLite (driver adapter)
+- Zod validation
+
+## Quickstart
 ```bash
+npm install
+npx prisma migrate dev
+npm run db:seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
+Open `http://localhost:3000`.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Demo script (2–3 minutes)
+1. Go to **Board** and create a task, advance it to Done.
+2. Open **Incidents**, create a new incident, advance status to Resolved.
+3. Visit **Alerts** and click “Simulate alert”.
+4. Check **Audit** for logged actions.
+5. Open **Analytics** for live metrics.
+6. Publish a release in **Releases**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## API surface
+- `GET/POST /api/tasks`
+- `PATCH/DELETE /api/tasks/:id`
+- `GET/POST /api/incidents`
+- `PATCH/DELETE /api/incidents/:id`
+- `GET/POST /api/alerts`
+- `POST /api/alerts/simulate`
+- `GET/POST /api/logs`
+- `GET /api/audit`
+- `GET /api/analytics`
+- `GET/POST /api/release-notes`
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Testing
+```bash
+npm run test:smoke
+```
+Smoke test validates alert simulation and audit log insertion.
 
-## Learn More
+## Release process
+- Record release notes in **Releases**
+- Update `CHANGELOG.md` (optional for future expansion)
+- Tag and deploy (Vercel or self-hosted)
 
-To learn more about Next.js, take a look at the following resources:
+## Disaster recovery (MVP)
+- Back up the SQLite file `dev.db`
+- Restore by replacing `dev.db` and reloading the app
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Monitoring & incident response
+- Alerts: `/alerts`
+- Logs: `/logs`
+- Audit trail: `/audit`
+- Analytics snapshot: `/analytics`
