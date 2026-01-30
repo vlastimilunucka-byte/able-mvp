@@ -1,8 +1,10 @@
 import { headers, cookies } from "next/headers";
 
 export default async function SettingsPage() {
-  const actorHeader = headers().get("x-actor");
-  const actorCookie = cookies().get("actor")?.value;
+  const headerList = await headers();
+  const cookieList = await cookies();
+  const actorHeader = headerList.get("x-actor");
+  const actorCookie = cookieList.get("actor")?.value;
   const actor = actorHeader ?? actorCookie ?? "demo@able";
 
   return (

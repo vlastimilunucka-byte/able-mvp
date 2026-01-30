@@ -6,10 +6,11 @@ import { writeAuditEvent } from "@/lib/audit";
 export const runtime = "nodejs";
 
 type Params = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function PATCH(request: Request, { params }: Params) {
+  const { id } = await params;
   const body = await request.json();
   const parsed = taskUpdateSchema.safeParse(body);
   if (!parsed.success) {
@@ -17,13 +18,13 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   const prisma = getPrisma();
-  const existing = await prisma.task.findUnique({ where: { id: params.id } });
+  const existing = await prisma.task.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: "Task not found" }, { status: 404 });
   }
 
   const task = await prisma.task.update({
-    where: { id: params.id },
+    where: { id },
     data: parsed.data,
   });
 
@@ -38,18 +39,19 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_: Request, { params }: Params) {
+  const { id } = await params;
   const prisma = getPrisma();
-  const existing = await prisma.task.findUnique({ where: { id: params.id } });
+  const existing = await prisma.task.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: "Task not found" }, { status: 404 });
   }
 
-  await prisma.task.delete({ where: { id: params.id } });
+  await prisma.task.delete({ where: { id } });
 
   await writeAuditEvent({
     action: "task.delete",
     entityType: "Task",
-    entityId: params.id,
+    entityId: id,
     metadata: { title: existing.title },
   });
 

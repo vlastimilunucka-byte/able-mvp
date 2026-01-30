@@ -1,9 +1,11 @@
 import { cookies, headers } from "next/headers";
 
-export function getActor() {
+export async function getActor() {
   try {
-    const headerActor = headers().get("x-actor");
-    const cookieActor = cookies().get("actor")?.value;
+    const headerList = await headers();
+    const cookieList = await cookies();
+    const headerActor = headerList.get("x-actor");
+    const cookieActor = cookieList.get("actor")?.value;
     return headerActor ?? cookieActor ?? "demo@able";
   } catch {
     return "system@able";
