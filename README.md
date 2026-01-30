@@ -44,6 +44,8 @@ Open `http://localhost:3000`.
 - `GET /api/audit`
 - `GET /api/analytics`
 - `GET/POST /api/release-notes`
+- `GET /api/health`
+- `GET /api/metrics`
 
 ## Testing
 ```bash
@@ -65,3 +67,5 @@ Smoke test validates alert simulation and audit log insertion.
 - Logs: `/logs`
 - Audit trail: `/audit`
 - Analytics snapshot: `/analytics`
+- Health check: `/api/health`
+- Metrics snapshot: `/api/metrics`

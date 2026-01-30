@@ -10,6 +10,19 @@ type GlobalPrisma = {
 
 const globalForPrisma = globalThis as GlobalPrisma;
 
+function resolveDatabaseUrl() {
+  if (process.env.DATABASE_URL) {
+    return process.env.DATABASE_URL;
+  }
+
+  const isVercel = process.env.VERCEL === "1" || Boolean(process.env.VERCEL_ENV);
+  if (isVercel) {
+    return "file:/tmp/able.db";
+  }
+
+  return "file:./dev.db";
+}
+
 async function ensureSchema(prisma: PrismaClient) {
   const existing = await prisma.$queryRawUnsafe<unknown[]>(
     "SELECT name FROM sqlite_master WHERE type='table' AND name='Task'"
@@ -36,7 +49,7 @@ async function ensureSchema(prisma: PrismaClient) {
 
 export async function getPrisma() {
   if (!globalForPrisma.prisma) {
-    const databaseUrl = process.env.DATABASE_URL ?? "file:./dev.db";
+    const databaseUrl = resolveDatabaseUrl();
     const adapter = new PrismaBetterSqlite3({ url: databaseUrl });
     globalForPrisma.prisma = new PrismaClient({
       adapter,
@@ -50,4 +63,12 @@ export async function getPrisma() {
 
   await globalForPrisma.initPromise;
   return globalForPrisma.prisma;
+}
+
+export async function resetPrismaForTests() {
+  if (globalForPrisma.prisma) {
+    await globalForPrisma.prisma.$disconnect();
+  }
+  delete globalForPrisma.prisma;
+  delete globalForPrisma.initPromise;
 }

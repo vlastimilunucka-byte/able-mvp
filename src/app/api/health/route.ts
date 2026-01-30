@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { getHealthSnapshot } from "@/lib/monitoring";
 
 export const runtime = "nodejs";
 
 export async function GET() {
-  return NextResponse.json({ ok: true, ts: new Date().toISOString() });
+  const snapshot = await getHealthSnapshot();
+  return NextResponse.json(snapshot, { status: snapshot.ok ? 200 : 503 });
 }

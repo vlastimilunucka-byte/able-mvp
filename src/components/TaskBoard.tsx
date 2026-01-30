@@ -2,7 +2,7 @@
 
 import { Task, TaskStatus } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
 const columns: TaskStatus[] = ["BACKLOG", "TODO", "DOING", "DONE"];
 
@@ -27,48 +27,162 @@ function label(status: TaskStatus) {
 }
 
 type Props = {
-  tasks: Task[];
+  tasks: TaskLite[];
 };
+
+type TaskLite = Pick<Task, "id" | "title" | "description" | "status" | "priority">;
+
+const storageKey = "able.tasks";
+
+function readStoredTasks(): TaskLite[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(storageKey);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as TaskLite[];
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item) => Boolean(item?.id && item?.title));
+  } catch {
+    return [];
+  }
+}
+
+function persistTasks(items: TaskLite[]) {
+  try {
+    window.localStorage.setItem(storageKey, JSON.stringify(items));
+  } catch {
+    // Ignore storage errors (private mode, quota).
+  }
+}
 
 export default function TaskBoard({ tasks }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [localTasks, setLocalTasks] = useState<TaskLite[]>(tasks);
+
+  useEffect(() => {
+    if (tasks.length > 0) {
+      setLocalTasks(tasks);
+      persistTasks(tasks);
+      return;
+    }
+
+    const stored = readStoredTasks();
+    if (stored.length > 0) {
+      setLocalTasks(stored);
+    }
+  }, [tasks]);
 
   const grouped = useMemo(() => {
     return columns.map((status) => ({
       status,
-      items: tasks.filter((task) => task.status === status),
+      items: localTasks.filter((task) => task.status === status),
     }));
-  }, [tasks]);
+  }, [localTasks]);
 
   const handleCreate = async () => {
-    if (!title.trim()) return;
-    await fetch("/api/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title: title.trim(), description: description || undefined }),
-    });
-    setTitle("");
-    setDescription("");
-    startTransition(() => router.refresh());
+    const trimmedTitle = title.trim();
+    if (trimmedTitle.length < 2) {
+      setError("Title must be at least 2 characters.");
+      return;
+    }
+
+    setIsSaving(true);
+    setError(null);
+    try {
+      const response = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: trimmedTitle,
+          description: description.trim() ? description : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        const message =
+          payload?.error?.formErrors?.join?.(", ") ||
+          payload?.error?.fieldErrors?.title?.join?.(", ") ||
+          payload?.error?.message ||
+          "Failed to save task.";
+        setError(message);
+      } else {
+        const payload = (await response.json().catch(() => null)) as { data?: Task } | null;
+        if (payload?.data?.id) {
+          const created: TaskLite = {
+            id: payload.data.id,
+            title: payload.data.title,
+            description: payload.data.description ?? null,
+            status: payload.data.status,
+            priority: payload.data.priority,
+          };
+          setLocalTasks((prev) => {
+            const next = [created, ...prev.filter((item) => item.id !== created.id)];
+            persistTasks(next);
+            return next;
+          });
+          startTransition(() => router.refresh());
+        }
+        setTitle("");
+        setDescription("");
+      }
+    } catch {
+      const fallback: TaskLite = {
+        id: typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}`,
+        title: trimmedTitle,
+        description: description.trim() ? description : null,
+        status: "BACKLOG",
+        priority: 3,
+      };
+      setLocalTasks((prev) => {
+        const next = [fallback, ...prev];
+        persistTasks(next);
+        return next;
+      });
+      setTitle("");
+      setDescription("");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const advanceTask = async (task: Task) => {
+  const advanceTask = async (task: TaskLite) => {
     if (task.status === "DONE") return;
-    await fetch(`/api/tasks/${task.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: nextStatus(task.status) }),
+    const next = nextStatus(task.status);
+    setLocalTasks((prev) => {
+      const updated = prev.map((item) => (item.id === task.id ? { ...item, status: next } : item));
+      persistTasks(updated);
+      return updated;
     });
-    startTransition(() => router.refresh());
+
+    try {
+      const response = await fetch(`/api/tasks/${task.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: next }),
+      });
+      if (response.ok) {
+        startTransition(() => router.refresh());
+      }
+    } catch {
+      // Keep local state even if API fails.
+    }
   };
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
         <h2 className="text-lg font-semibold text-white">Create task</h2>
+        {error ? (
+          <div className="mt-3 rounded-lg border border-rose-500/50 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+            {error}
+          </div>
+        ) : null}
         <div className="mt-4 grid gap-3 md:grid-cols-3">
           <input
             className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-100"
@@ -85,7 +199,7 @@ export default function TaskBoard({ tasks }: Props) {
           <button
             className="rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-400 disabled:opacity-50"
             onClick={handleCreate}
-            disabled={isPending}
+            disabled={isPending || isSaving}
           >
             Add task
           </button>

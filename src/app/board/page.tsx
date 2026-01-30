@@ -6,6 +6,13 @@ export const dynamic = "force-dynamic";
 export default async function BoardPage() {
   const prisma = await getPrisma();
   const tasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" } });
+  const liteTasks = tasks.map((task) => ({
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    priority: task.priority,
+  }));
 
   return (
     <div className="space-y-6">
@@ -13,7 +20,7 @@ export default async function BoardPage() {
         <h1 className="text-2xl font-semibold text-white">Task board</h1>
         <p className="text-sm text-slate-400">Plan, execute, and review work in one place.</p>
       </div>
-      <TaskBoard tasks={tasks} />
+      <TaskBoard tasks={liteTasks} />
     </div>
   );
 }
