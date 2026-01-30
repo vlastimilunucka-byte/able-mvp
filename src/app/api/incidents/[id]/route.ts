@@ -17,7 +17,7 @@ export async function PATCH(request: Request, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const existing = await prisma.incident.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: "Incident not found" }, { status: 404 });
@@ -40,7 +40,7 @@ export async function PATCH(request: Request, { params }: Params) {
 
 export async function DELETE(_: Request, { params }: Params) {
   const { id } = await params;
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const existing = await prisma.incident.findUnique({ where: { id } });
   if (!existing) {
     return NextResponse.json({ error: "Incident not found" }, { status: 404 });

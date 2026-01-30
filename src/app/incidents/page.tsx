@@ -4,7 +4,7 @@ import { getPrisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function IncidentsPage() {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const incidents = await prisma.incident.findMany({
     orderBy: { createdAt: "desc" },
     include: { alerts: true, logs: true },

@@ -5,7 +5,7 @@ import { writeAuditEvent } from "@/lib/audit";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const notes = await prisma.releaseNote.findMany({
     orderBy: { createdAt: "desc" },
   });
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing version/title/body" }, { status: 400 });
   }
 
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const note = await prisma.releaseNote.create({
     data: {
       version: body.version,

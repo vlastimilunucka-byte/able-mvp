@@ -11,7 +11,7 @@ type AuditInput = {
 };
 
 export async function writeAuditEvent(input: AuditInput) {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const actor = input.actor ?? (await getActor());
 
   await prisma.auditEvent.create({

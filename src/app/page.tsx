@@ -4,7 +4,7 @@ import { getPrisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const [snapshot, latestAlerts, latestRelease] = await Promise.all([
     getAnalyticsSnapshot(),
     prisma.alert.findMany({ orderBy: { triggeredAt: "desc" }, take: 3 }),

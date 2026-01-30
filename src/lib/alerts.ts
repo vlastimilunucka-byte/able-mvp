@@ -10,7 +10,7 @@ type SimulateAlertInput = {
 };
 
 export async function simulateAlert(input: SimulateAlertInput) {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const alert = await prisma.alert.create({
     data: {
       title: input.title,

@@ -4,7 +4,7 @@ import { getPrisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function ReleasesPage() {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const releases = await prisma.releaseNote.findMany({
     orderBy: { createdAt: "desc" },
   });

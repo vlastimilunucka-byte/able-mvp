@@ -1,7 +1,7 @@
 import { getPrisma } from "@/lib/db";
 
 export async function getAnalyticsSnapshot() {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const [taskCounts, incidentCounts, activeAlerts, recentLogs] = await Promise.all([
     prisma.task.groupBy({ by: ["status"], _count: true }),
     prisma.incident.groupBy({ by: ["status"], _count: true }),

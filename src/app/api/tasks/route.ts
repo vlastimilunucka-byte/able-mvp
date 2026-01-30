@@ -6,7 +6,7 @@ import { writeAuditEvent } from "@/lib/audit";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const tasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" } });
   return NextResponse.json({ data: tasks });
 }
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const task = await prisma.task.create({ data: parsed.data });
 
   await writeAuditEvent({

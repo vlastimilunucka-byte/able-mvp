@@ -4,7 +4,7 @@ import { getPrisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export default async function AlertsPage() {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const alerts = await prisma.alert.findMany({
     orderBy: { triggeredAt: "desc" },
     take: 50,

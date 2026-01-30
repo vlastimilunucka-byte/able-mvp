@@ -3,7 +3,7 @@ import { simulateAlert } from "../src/lib/alerts";
 import { getPrisma } from "../src/lib/db";
 
 async function run() {
-  const prisma = getPrisma();
+  const prisma = await getPrisma();
   const beforeAlerts = await prisma.alert.count();
 
   await simulateAlert({ title: "Smoke test alert", severity: "LOW", actor: "test@able" });
