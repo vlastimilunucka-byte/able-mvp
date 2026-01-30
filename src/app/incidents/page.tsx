@@ -1,6 +1,8 @@
 import IncidentPanel from "@/components/IncidentPanel";
 import { getPrisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function IncidentsPage() {
   const prisma = getPrisma();
   const incidents = await prisma.incident.findMany({

@@ -1,6 +1,8 @@
 import ReleasePanel from "@/components/ReleasePanel";
 import { getPrisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReleasesPage() {
   const prisma = getPrisma();
   const releases = await prisma.releaseNote.findMany({

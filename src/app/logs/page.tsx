@@ -1,6 +1,8 @@
 import LogPanel from "@/components/LogPanel";
 import { getPrisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function LogsPage() {
   const prisma = getPrisma();
   const logs = await prisma.logEntry.findMany({

@@ -1,6 +1,8 @@
 import { getAnalyticsSnapshot } from "@/lib/analytics";
 import { getPrisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const prisma = getPrisma();
   const [snapshot, latestAlerts, latestRelease] = await Promise.all([

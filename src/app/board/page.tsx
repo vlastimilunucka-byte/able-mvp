@@ -1,6 +1,8 @@
 import TaskBoard from "@/components/TaskBoard";
 import { getPrisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function BoardPage() {
   const prisma = getPrisma();
   const tasks = await prisma.task.findMany({ orderBy: { createdAt: "desc" } });
